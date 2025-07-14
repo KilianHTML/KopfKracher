@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Landscape Countdown - Spiel</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #111;
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+            text-align: center;
+            flex-direction: column;
+        }
+
+        #countdown {
+            font-size: 5em;
+            font-weight: bold;
+            display: none;
+        }
+
+        #word {
+            font-size: 3em;
+            margin-top: 20px;
+            display: none;
+        }
+
+        #timer {
+            font-size: 2em;
+            margin-top: 10px;
+            display: none;
+        }
+
+        #instruction {
+            font-size: 2em;
+        }
+
+        #requestPermission {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+        }
+    </style>
+</head>
+<body>
+    <p id="instruction">Drehe dein Gerät ins Querformat…</p>
+    <div id="countdown"></div>
+    <div id="word"></div>
+    <div id="timer"></div>
+    <button id="requestPermission" style="display:none;">Sensor erlauben</button>
+
+    <script>
+        const countdownEl = document.getElementById('countdown');
+        const wordEl = document.getElementById('word');
+        const instructionEl = document.getElementById('instruction');
+        const permissionBtn = document.getElementById('requestPermission');
+        const timerEl = document.getElementById('timer');
+
+        let words = [];
+        let wordsLoaded = false;
+
+        let timerInterval = null;
+        let timerSeconds = 60;
+        let timerRunning = false;
+
+        // Wörter laden
+        fetch('words.json')
+            .then(response => {
+                if (!response.ok) throw new Error("words.json nicht gefunden");
+                return response.json();
+            })
+            .then(data => {
+                words = data;
+                wordsLoaded = true;
+                if (isLandscape()) startGame();
+            })
+            .catch(err => {
+                console.error("Fehler beim Laden der Wörter:", err);
+                instructionEl.textContent = "Fehler beim Laden der Wörter.";
+            });
+
+        function isLandscape() {
+            return window.innerWidth > window.innerHeight;
+        }
+
+        function startCountdown(seconds = 3) {
+            let count = seconds;
+            countdownEl.style.display = 'block';
+            countdownEl.textContent = count;
+            wordEl.style.display = 'none';
+            timerEl.style.display = 'none';
+
+            const interval = setInterval(() => {
+                count--;
+                countdownEl.textContent = count;
+
+                if (count <= 0) {
+                    clearInterval(interval);
+                    countdownEl.style.display = 'none';
+                    displayRandomWord();
+                }
+            }, 1000);
+        }
+
+        function displayRandomWord() {
+            if (words.length > 0) {
+                const randomIndex = Math.floor(Math.random() * words.length);
+                wordEl.textContent = `Das Wort ist: ${words[randomIndex]}`;
+                wordEl.style.display = 'block';
+                startTimer(60);
+            } else {
+                wordEl.textContent = "Keine Wörter verfügbar!";
+            }
+        }
+
+        function startTimer(seconds = 60) {
+            timerSeconds = seconds;
+            timerRunning = true;
+            timerEl.style.display = 'block';
+            updateTimerDisplay();
+
+            if (timerInterval) clearInterval(timerInterval);
+
+            timerInterval = setInterval(() => {
+                if (!timerRunning) return;
+
+                timerSeconds--;
+                updateTimerDisplay();
+
+                if (timerSeconds <= 0) {
+                    clearInterval(timerInterval);
+                    timerEl.style.display = 'none';
+                    wordEl.textContent = '';
+                    wordEl.style.display = 'none';
+                    instructionEl.style.display = 'block';
+                    instructionEl.textContent = 'Zeit abgelaufen! Drehe dein Gerät ins Querformat für ein neues Wort.';
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timerSeconds / 60);
+            const seconds = timerSeconds % 60;
+            timerEl.textContent = `Verbleibende Zeit: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function startGame() {
+            instructionEl.style.display = 'none';
+            startCountdown(3);
+        }
+
+        function handleOrientationChange() {
+            if (isLandscape() && wordsLoaded) {
+                if (!timerRunning) startGame();
+            } else {
+                // Pause & ausblenden im Hochformat
+                instructionEl.style.display = 'block';
+                instructionEl.textContent = 'Drehe dein Gerät ins Querformat…';
+                wordEl.style.display = 'none';
+                timerEl.style.display = 'none';
+                countdownEl.style.display = 'none';
+                timerRunning = false;
+                if (timerInterval) clearInterval(timerInterval);
+            }
+        }
+
+        window.addEventListener('resize', handleOrientationChange);
+
+        function handleTilt(event) {
+            const gamma = event.gamma;
+            if (gamma === null) return;
+
+            let orientation = (screen.orientation && screen.orientation.angle) || window.orientation || 0;
+
+            let gekipptNachUnten = false;
+            let gekipptNachOben = false;
+
+            if (orientation === 90) {
+                // Landscape rechts
+                gekipptNachUnten = gamma < 50 && gamma > 0;
+                gekipptNachOben = gamma > -50 && gamma < 0;
+            } else if (orientation === -90 || orientation === 270) {
+                // Landscape links
+                gekipptNachUnten = gamma > -50 && gamma < 0;
+                gekipptNachOben = gamma < 50 && gamma > 0;
+            }
+
+            if (gekipptNachUnten) {
+                document.body.style.backgroundColor = 'green';
+            } else if (gekipptNachOben) {
+                document.body.style.backgroundColor = 'red';
+            } else {
+                document.body.style.backgroundColor = '#111';
+            }
+        }
+
+        function enableTiltDetection() {
+            if (typeof DeviceOrientationEvent !== "undefined" &&
+                typeof DeviceOrientationEvent.requestPermission === "function") {
+
+                // iOS
+                permissionBtn.style.display = 'block';
+
+                permissionBtn.addEventListener('click', () => {
+                    DeviceOrientationEvent.requestPermission()
+                        .then(response => {
+                            if (response === 'granted') {
+                                window.addEventListener('deviceorientation', handleTilt);
+                                permissionBtn.style.display = 'none';
+                            } else {
+                                alert("Bewegungserkennung wurde abgelehnt.");
+                            }
+                        })
+                        .catch(console.error);
+                });
+            } else {
+                // Android / Desktop
+                window.addEventListener('deviceorientation', handleTilt);
+            }
+        }
+
+        window.addEventListener('load', () => {
+            enableTiltDetection();
+            handleOrientationChange();
+        });
+    </script>
+</body>
+</html>
