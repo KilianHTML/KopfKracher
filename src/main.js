@@ -9,7 +9,7 @@ const resultListEl = document.getElementById('resultList');
 let words = [];
 let wordsLoaded = false;
 let score = 0;
-let timerSeconds = 13;
+let timerSeconds = 63;
 let timerInterval = null;
 let timerRunning = false;
 let countdownRunning = false;
@@ -87,7 +87,7 @@ function displayRandomWord() {
   }
 }
 
-function startTimer(seconds = 13) {
+function startTimer(seconds = 63) {
   timerSeconds = seconds;
   timerRunning = true;
   updateTimerDisplay();
@@ -130,7 +130,7 @@ function startGame() {
   score = 0;
   updateScore();
   startCountdown(3);
-  startTimer(13);
+  startTimer(63);
 }
 
 function abortGame() {
