@@ -1,3 +1,89 @@
 body {
-    background-color: #2F2F2F
+  font-family: Arial, sans-serif;
+  background: #111;
+  color: #fff;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  overflow: hidden;
+  text-align: center;
+  flex-direction: column;
+}
+
+#countdown {
+  font-size: 5em;
+  font-weight: bold;
+  display: none;
+}
+
+#score {
+  font-size: 2.5em;
+  margin-bottom: 10px;
+  display: none;
+}
+
+#word {
+  font-size: 3em;
+  margin-top: 10px;
+  display: none;
+}
+
+#timer {
+  font-size: 2em;
+  margin-top: 10px;
+  display: none;
+}
+
+#instruction {
+  font-size: 2em;
+  padding: 1em;
+}
+
+#requestPermission {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 15px 30px;
+  font-size: 1.2em;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, #4caf50, #2e7d32);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(46, 125, 50, 0.4);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+  user-select: none;
+}
+
+#requestPermission:hover {
+  background: linear-gradient(135deg, #66bb6a, #388e3c);
+  box-shadow: 0 6px 12px rgba(56, 142, 60, 0.6);
+}
+
+#requestPermission:active {
+  background: linear-gradient(135deg, #388e3c, #1b5e20);
+  box-shadow: 0 2px 4px rgba(27, 94, 32, 0.8);
+  transform: translateY(1px);
+}
+
+
+#resultList {
+  margin-top: 20px;
+  font-size: 1.5em;
+  display: none;
+}
+
+.richtig {
+  color: limegreen;
+}
+
+.falsch {
+  color: crimson;
+}
+
+.offen {
+  color: gray;
 }
